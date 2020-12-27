@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-	name: "Socket",
+	name: "socket",
 	platforms: [
 		.macOS(.v10_15)
 	],

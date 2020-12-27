@@ -1,4 +1,4 @@
 import Foundation
 
-let decoder = JSONDecoder()
-let encoder = JSONEncoder()
+internal let decoder = JSONDecoder()
+internal let encoder = JSONEncoder()
