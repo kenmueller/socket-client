@@ -5,7 +5,9 @@ public final class Socket {
 	
 	private static let PING_INTERVAL: TimeInterval = 10
 	
-	private let task: URLSessionWebSocketTask
+	private let url: URL
+	
+	private var task: URLSessionWebSocketTask?
 	private var pingTimer: Timer?
 	
 	private var listeners = [String: (Data) -> Void]()
@@ -14,22 +16,27 @@ public final class Socket {
 	
 	public private(set) var isConnected = false
 	
-	public init<Query: SocketQuery>(url: URL, query: Query, connect: Bool = true) throws {
-		task = URLSession.shared.webSocketTask(
-			with: try url.addQuery(query)
-		)
-		
-		if connect {
-			self.connect()
-		}
+	public init(url: URL) {
+		self.url = url
+	}
+	
+	public init<Query: SocketQuery>(url: URL, query: Query) throws {
+		self.url = url
+		try connect(query: query)
 	}
 	
 	deinit {
 		disconnect()
 	}
 	
-	public func connect() {
+	public func connect<Query: SocketQuery>(query: Query) throws {
 		if isConnected { return }
+		
+		task = URLSession.shared.webSocketTask(
+			with: try url.addQuery(query)
+		)
+		
+		guard let task = task else { return }
 		
 		attachOnReceive()
 		task.resume()
@@ -39,7 +46,7 @@ public final class Socket {
 	}
 	
 	private func attachOnReceive() {
-		task.receive(completionHandler: onReceive)
+		task?.receive(completionHandler: onReceive)
 	}
 	
 	private func onReceive(_ result: Result<URLSessionWebSocketTask.Message, Error>) {
@@ -70,7 +77,7 @@ public final class Socket {
 		) { [weak self] _ in
 			guard let self = self else { return }
 			
-			self.task.sendPing { error in
+			self.task?.sendPing { error in
 				guard let error = error else { return }
 				self.pingErrorHandler?(error)
 			}
@@ -97,6 +104,11 @@ public final class Socket {
 	
 	public func send<Message: SocketMessage>(_ message: Message, completion: ((Error?) -> Void)? = nil) {
 		do {
+			guard let task = task else {
+				completion?(SocketError.disconnected)
+				return
+			}
+			
 			task.send(.data(try encoder.encode(SocketRawMessage(message)))) {
 				completion?($0)
 			}
@@ -108,7 +120,7 @@ public final class Socket {
 	public func disconnect() {
 		guard isConnected else { return }
 		
-		task.cancel()
+		task?.cancel()
 		pingTimer?.invalidate()
 		
 		isConnected = false
