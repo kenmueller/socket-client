@@ -92,13 +92,18 @@ public final class Socket {
 		pingErrorHandler = handler
 	}
 	
-	public func on<Message: SocketMessage>(_ listener: @escaping (Message) -> Void) {
+	public func on<Message: SocketMessage>(
+		_ queue: DispatchQueue = .main,
+		_ listener: @escaping (Message) -> Void
+	) {
 		listeners[Message.id] = { data in
 			guard let message = try? decoder.decode(Message.self, from: data) else {
 				return
 			}
 			
-			listener(message)
+			queue.async {
+				listener(message)
+			}
 		}
 	}
 	
