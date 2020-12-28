@@ -17,7 +17,7 @@ public final class Socket {
 	/// The timer that keeps the connection alive.
 	private var pingTimer: Timer?
 	
-	/// Inbound message listeners.
+	/// Incoming message listeners.
 	private var listeners = [String: (Data) -> Void]()
 	
 	/// Handles incoming message errors.
