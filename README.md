@@ -14,7 +14,7 @@ A `Query` conforms to the `SocketQuery` protocol and represents the initial data
 ```swift
 struct UserQuery: SocketQuery {
     let id: UUID
-	let name: String
+    let name: String
 }
 ```
 
@@ -28,8 +28,8 @@ let socket = Socket(url: url)
 
 // Autoconnect
 let socket = try! Socket(
-	url: url,
-	query: UserQuery(id: UUID(), name: "Ken")
+    url: url,
+    query: UserQuery(id: UUID(), name: "Ken")
 )
 ```
 
@@ -65,7 +65,7 @@ socket.on { (greeting: Greeting) in
 
 // Run on a different thread
 socket.on(.global(qos: .background)) { (greeting: Greeting) in
-	print(greeting.text)
+    print(greeting.text)
 }
 ```
 
